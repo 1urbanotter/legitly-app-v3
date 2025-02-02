@@ -1,17 +1,18 @@
-// src/app/login/page.tsx
-'use client'
+// src/app/auth/signup/page.tsx
+
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCookies } from 'react-cookie';
 
-const LoginPage = () => {
+const SignUpPage = () => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const router = useRouter();
-  const [cookies, setCookie] = useCookies(['token']);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -19,29 +20,27 @@ const LoginPage = () => {
     setSuccess(false);
 
     try {
-      const res = await fetch('/api/login', {
+      const res = await fetch('/api/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
-      if (res.status === 200) {
-        const data = await res.json();
+      if (res.status === 201) {
+        const { token } = await res.json();
         setSuccess(true);
-        setEmail('');
-        setPassword('');
 
         // Store the token in a cookie
-        setCookie('token', data.token, { path: '/', maxAge: 86400 }); // Expires after 1 day
+        localStorage.setItem('token', token);
 
         setTimeout(() => {
-          router.push('/dashboard'); // Redirect to dashboard after successful login
+          router.push('/dashboard');
         }, 1500);
       } else {
-        const data = await res.json();
-        setError(data.message || 'An error occurred during login.');
+        const { message } = await res.json();
+        setError(message || 'An error occurred during registration.');
       }
     } catch (err) {
       console.error(err);
@@ -53,7 +52,7 @@ const LoginPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-alabaster-500">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
         <h1 className="text-2xl font-bold mb-6 text-center text-space_cadet-700">
-          Login to Legitly
+          Sign Up for Legitly
         </h1>
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -64,10 +63,36 @@ const LoginPage = () => {
         {success && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
             <strong className="font-bold">Success! </strong>
-            <span className="block sm:inline">You have successfully logged in. Redirecting...</span>
+            <span className="block sm:inline">You have successfully signed up. Redirecting...</span>
           </div>
         )}
         <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="firstName">
+              First Name
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="firstName"
+              type="text"
+              placeholder="Your First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+            />
+          </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lastName">
+              Last Name
+            </label>
+            <input
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              id="lastName"
+              type="text"
+              placeholder="Your Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+            />
+          </div>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
               Email
@@ -99,7 +124,7 @@ const LoginPage = () => {
               className="bg-space_cadet-500 hover:bg-space_cadet-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
               type="submit"
             >
-              Login
+              Sign Up
             </button>
           </div>
         </form>
@@ -108,4 +133,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default SignUpPage;
